@@ -1,0 +1,10 @@
+.ipynb_checkpoints
+.idea
+.venv
+address
+key
+config.yml
+api_key
+Untitled.ipynb
+__pycache__
+teste*
