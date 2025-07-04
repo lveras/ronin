@@ -24,7 +24,7 @@ Vc só precisa executar o arquivo `main.py` com os métodos que irá utilizar. N
 - orar para atia
 - Usar um lucky pounch no axie onde o ID é o que vc definiu
 
-![img.png](img.png)
+![img.png](images/main.png)
 
 ### Rodando Local via docker
 Mesma coisa, só que criando a imagem docker. Corre atrás ai, criar a imagem é easy.
