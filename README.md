@@ -1,6 +1,6 @@
 # Interacoes com a Ronin
 
-Este programa tem por objetivo fazer com que sua carteira interaja com smart contracts na RONIN(https://roninchain.com).
+Este script tem por objetivo interagir com smart contracts na RONIN(https://roninchain.com), sem a necessidade do uso direto da carteira, utilizando a api diretamente para isso.
 
 ## Onde posso executar?
 - Local
