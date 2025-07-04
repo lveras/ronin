@@ -147,7 +147,7 @@ class Ronin:
         ).build_transaction(
             {
                 "gas": 2000000,
-                "gasPrice": self.w3.to_wei("20", "gwei"),
+                "gasPrice": self.w3.to_wei("21", "gwei"),
                 "nonce": self.w3.eth.get_transaction_count(self.wallet_address),
             }
         )
@@ -223,7 +223,7 @@ class Ronin:
             {
                 "from": self.wallet_address,
                 "gas": 2000000,
-                "gasPrice": self.w3.to_wei("20", "gwei"),
+                "gasPrice": self.w3.to_wei("21", "gwei"),
                 "nonce": self.w3.eth.get_transaction_count(self.wallet_address),
             }
         )
@@ -237,7 +237,7 @@ class Ronin:
             {
                 "from": self.wallet_address,
                 "gas": 2000000,
-                "gasPrice": self.w3.to_wei("20", "gwei"),
+                "gasPrice": self.w3.to_wei("21", "gwei"),
                 "nonce": self.w3.eth.get_transaction_count(self.wallet_address),
             }
         )
@@ -250,7 +250,7 @@ class Ronin:
             self.wallet_address).build_transaction(
             {
                 "gas": 2000000,
-                "gasPrice": self.w3.to_wei("20", "gwei"),
+                "gasPrice": self.w3.to_wei("21", "gwei"),
                 "nonce": self.w3.eth.get_transaction_count(self.wallet_address)
             }
         )
@@ -325,13 +325,11 @@ class Ronin:
 
 if __name__ == '__main__':
     ronin = Ronin()
-    # ronin.rajada(
-    #     method="buy",
-    #     tiros=1,
-    #     token="0x94d2f9ff5d5717cceb65bcfc80111f09a6d81c26",
-    #     amount_in=0.001,
-    #     gas=2000000,
-    #     gas_price=20
-    # )
-
-    ronin.atia_blessing()
+    ronin.rajada(
+        method="sell",
+        tiros=1,
+        token="0xe674d60f860758b1820f683f8728ae69dc5dfc0e",
+        amount_in=0.85,
+        gas=2000000,
+        gas_price=20
+    )
