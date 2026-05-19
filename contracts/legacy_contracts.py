@@ -1,14 +1,11 @@
-import os
-
 from web3 import Web3
-from web3.middleware import ExtraDataToPOAMiddleware
 import json
 from datetime import datetime
-from skymavis import SkyMavis
+from api.skymavis_rest import SkyMavis
 import asyncio
-import yaml
-from google.cloud import secretmanager
-
+from core.wallet import Wallet
+from core.config import config
+from eth_account.messages import encode_structured_data
 
 CONTRACTS = {
     "main_contract": {
@@ -43,52 +40,19 @@ APPROVE_SPENDER = "0xA54b0184D12349Cf65281C6F965A74828DDd9E8F"
 APPROVE_AMOUNT = 115792089237316195423570985008687907853269984665640564039457584007913129639935
 
 
-class Ronin:
+class LegacyContracts:
     _contract = None
     _contract_paramns = {}
     ronin_chain_id = 2020
-    _config = None
     _signature = None
 
-    def __init__(self):
-        self.ronin_provider_url = (
-            f"https://ronin-mainnet.core.chainstack.com/"
-            f"{self.config["chainstack"]}")
-
-        self.w3 = Web3(Web3.HTTPProvider(self.ronin_provider_url))
-        self.w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
-
-        if not self.w3.is_connected():
-            print("Erro: Não foi possível conectar à rede Ronin.")
-
-        self.wallet_private_key = self.config["key"]
-        self.wallet_address = Web3.to_checksum_address(self.config["address"])
-
-    @property
-    def config(self):
-        if self._config:
-            return self._config
-
-        local_config = {}
-        if os.path.isfile("config.yml"):
-            local_config = yaml.safe_load(open("config.yml")) or {}
-
-        # Se temos as chaves locais, usamos elas
-        if "key" in local_config and "api_key" in local_config:
-            self._config = local_config
-        else:
-            # Se não, buscamos no secret manager (precisamos do project_id)
-            project_id = local_config.get("project_id") or os.environ.get("GCP_PROJECT_ID")
-            if not project_id:
-                raise ValueError("O 'project_id' precisa estar no config.yml ou na variável de ambiente GCP_PROJECT_ID")
-
-            client = secretmanager.SecretManagerServiceClient()
-            secret_id = "axie_keys"
-            name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
-            response = client.access_secret_version(request={"name": name})
-            self._config = yaml.safe_load(response.payload.data.decode("UTF-8"))
-
-        return self._config
+    def __init__(self, wallet: Wallet):
+        self.wallet = wallet
+        self.w3 = wallet.w3
+        self.wallet_private_key = wallet.private_key
+        self.wallet_address = wallet.address
+        self.check_tx_status = wallet.check_tx_status
+        self.send_transaction = wallet.send_transaction
 
     @property
     def contract(self):
@@ -137,18 +101,6 @@ class Ronin:
             "nonce": nonce,
             "chainId": self.ronin_chain_id
         }
-
-    async def check_tx_status(self, tx_hash):
-        receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
-        if receipt.get("status") == 1:
-            print(f"Transaction {tx_hash} success!")
-        else:
-            print(f"Transaction {tx_hash} fail!")
-
-    async def send_transaction(self, tx):
-        signed_tx = self.w3.eth.account.sign_transaction(tx, self.wallet_private_key)
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-        return tx_hash
 
     def restake_ron(self):
         self.contract = "ron_staking"

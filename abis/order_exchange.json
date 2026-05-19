@@ -1,0 +1,99 @@
+[
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_settlePrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_referralPct",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_referralAddr",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "_signature",
+        "type": "bytes"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "maker",
+            "type": "address"
+          },
+          {
+            "internalType": "uint8",
+            "name": "kind",
+            "type": "uint8"
+          },
+          {
+            "components": [
+              {
+                "internalType": "uint8",
+                "name": "erc",
+                "type": "uint8"
+              },
+              {
+                "internalType": "address",
+                "name": "addr",
+                "type": "address"
+              },
+              {
+                "internalType": "uint256",
+                "name": "id",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "quantity",
+                "type": "uint256"
+              }
+            ],
+            "internalType": "struct Asset[]",
+            "name": "assets",
+            "type": "tuple[]"
+          },
+          {
+            "internalType": "uint256",
+            "name": "expiredAt",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "paymentToken",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "startedPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "endedPrice",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Order",
+        "name": "_order",
+        "type": "tuple"
+      }
+    ],
+    "name": "settleOrder",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]
