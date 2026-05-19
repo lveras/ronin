@@ -298,12 +298,23 @@ class Ronin:
         print(f"Transaction {tx_hash.hex()} to sell has sent.")
         return tx_hash
 
+    def check_allowance(self, token: str):
+        self.contract = "approve"
+        self.set_contract_hash(token)
+        allowance_amount = self.contract.functions.allowance(
+            self.wallet_address, APPROVE_SPENDER
+        ).call()
+        return allowance_amount
+
     async def approve(self, token: str, nonce=None):
         if not nonce:
             nonce = self.w3.eth.get_transaction_count(self.wallet_address)
-        if SkyMavis.check_approve_request(token=token, address=self.wallet_address):
+        
+        allowance = self.check_allowance(token)
+        if allowance > 0:
             print("Transaction Approval is not necessary")
             return
+            
         self.contract = "approve"
         self.set_contract_hash(token)
         tx = self.contract.functions.approve(
