@@ -3,7 +3,7 @@
 
 import time
 from core.database import MarketDatabase
-from core.valuation import AxieValuationEngine
+from core.ml_valuation import AxieMLValuationEngine
 from api.marketplace_graphql import MarketplaceGraphQL
 from agents.sync_agent import SyncAgent
 
@@ -17,7 +17,7 @@ class SniperAgent:
     def __init__(self):
         self.db = MarketDatabase()
         self.api = MarketplaceGraphQL()
-        self.valuation_engine = AxieValuationEngine(self.db)
+        self.valuation_engine = AxieMLValuationEngine(self.db)
         self.sync_agent = SyncAgent()
 
     def run_sniper_cycle(self, limit: int = 50, dry_run: bool = True):
