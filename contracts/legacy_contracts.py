@@ -295,15 +295,3 @@ class LegacyContracts:
 
     def rajada(self, method, tiros, token, amount_in, gas, gas_price):
         asyncio.run(self._rajada(method, tiros, token, amount_in, gas, gas_price))
-
-
-if __name__ == '__main__':
-    ronin = Ronin()
-    ronin.rajada(
-        method="sell",
-        tiros=1,
-        token="0xe674d60f860758b1820f683f8728ae69dc5dfc0e",
-        amount_in=0.85,
-        gas=2000000,
-        gas_price=20
-    )

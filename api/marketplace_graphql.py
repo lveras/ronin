@@ -34,6 +34,7 @@ fragment AxieBrief on Axie {
     class
     type
     specialGenes
+    stage
     __typename
   }
   stats {
@@ -91,6 +92,7 @@ fragment AxieDetail on Axie {
     class
     type
     specialGenes
+    stage
     __typename
   }
   stats {
