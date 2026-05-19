@@ -1,4 +1,4 @@
-import os.path
+import os
 
 from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
@@ -68,15 +68,26 @@ class Ronin:
     def config(self):
         if self._config:
             return self._config
+
+        local_config = {}
         if os.path.isfile("config.yml"):
-            self._config = yaml.safe_load(open("config.yml"))
+            local_config = yaml.safe_load(open("config.yml")) or {}
+
+        # Se temos as chaves locais, usamos elas
+        if "key" in local_config and "api_key" in local_config:
+            self._config = local_config
         else:
-            project_id = "SEU_PROJECT_ID"
+            # Se não, buscamos no secret manager (precisamos do project_id)
+            project_id = local_config.get("project_id") or os.environ.get("GCP_PROJECT_ID")
+            if not project_id:
+                raise ValueError("O 'project_id' precisa estar no config.yml ou na variável de ambiente GCP_PROJECT_ID")
+
             client = secretmanager.SecretManagerServiceClient()
             secret_id = "axie_keys"
             name = f"projects/{project_id}/secrets/{secret_id}/versions/latest"
             response = client.access_secret_version(request={"name": name})
             self._config = yaml.safe_load(response.payload.data.decode("UTF-8"))
+
         return self._config
 
     @property
