@@ -16,6 +16,7 @@ fragment AxieBrief on Axie {
   newGenes
   battleInfo {
     banned
+    level
     __typename
   }
   order {

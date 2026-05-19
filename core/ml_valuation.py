@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Motor de valoração estatística (ML Inference Engine) baseado em Machine Learning."""
+"""Motor de valoração estatística (ML Inference Engine) baseado em Machine Learning com Coerência de Arquétipos."""
 
 import os
 import pickle
@@ -40,24 +40,25 @@ class AxieMLValuationEngine:
             title = axie_data.get("title", "")
             level = int(axie_data.get("battleInfo", {}).get("level", 1) or 1)
             
-            # 1. Feature Engineering
+            # 1. Feature Engineering (Alinhado com a Coerência de Arquétipos)
             rarity = AxieDecoder.decode_axie_rarity(title, parts)
-            evolved = AxieDecoder.parse_evolved_parts(parts)
             
-            # Calcula o score meta total
-            meta_synergy = 0.0
-            for p in parts:
-                special_genes = p.get("specialGenes") or ""
-                # Apenas peças trocáveis/livres entram no score meta para ponderação correta
-                if not special_genes:
-                    meta_synergy += self.db.get_meta_part_score(p.get("id", ""))
+            # Obtém a sinergia coerente baseada no arquétipo dominante
+            dominant_arch, synergy_score, dominant_parts = self.deterministic_engine.get_tactical_synergy(parts)
+            
+            # Conta apenas as partes evoluídas que pertencem ao arquétipo meta dominante
+            evolved = AxieDecoder.parse_evolved_parts(parts)
+            upgraded_count_meta = 0
+            for part_id in evolved["upgraded_part_ids"]:
+                if part_id.lower() in dominant_parts:
+                    upgraded_count_meta += 1
 
             # Cria o DataFrame de entrada com as mesmas colunas usadas no treino
             features = pd.DataFrame([{
                 "is_collectible": 1 if rarity["is_collectible"] else 0,
                 "axie_level": level,
-                "upgraded_parts_count": evolved["upgraded_count"],
-                "meta_synergy": meta_synergy
+                "upgraded_parts_count": upgraded_count_meta,
+                "meta_synergy": synergy_score
             }])
 
             # 2. Faz a previsão
@@ -68,11 +69,12 @@ class AxieMLValuationEngine:
                 "estimated_value_usd": round(max(0.2, predicted_price_usd), 2),
                 "breakdown": {
                     "ml_model_prediction": round(predicted_price_usd, 2),
-                    "meta_synergy": round(meta_synergy, 2)
+                    "meta_synergy": round(synergy_score, 2),
+                    "dominant_archetype": dominant_arch or "Nenhum"
                 },
                 "is_collectible": rarity["is_collectible"],
                 "collectible_type": rarity["collectible_type"],
-                "upgraded_parts_count": evolved["upgraded_count"],
+                "upgraded_parts_count": upgraded_count_meta,
                 "level": level,
                 "engine": "Machine Learning (RandomForest)"
             }

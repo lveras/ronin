@@ -58,6 +58,21 @@ class SniperAgent:
 
             # Verifica a condição de arbitragem: Margem Mínima de 50% de Lucro Líquido
             if profit_percentage >= 0.50:
+                # Carrega os detalhes completos do Axie para ter o nível exato on-chain (ex: level 17)
+                try:
+                    full_axie = self.api.get_axie_detail(axie.get("id"))
+                    if full_axie:
+                        axie = full_axie
+                        # Reavalia com os dados completos e precisos
+                        valuation = self.valuation_engine.evaluate_axie(axie)
+                        estimated_value_usd = valuation["estimated_value_usd"]
+                        conservative_resell_usd = estimated_value_usd * 0.90
+                        net_resell_yield_usd = conservative_resell_usd * NET_REVENUE_COEFF
+                        net_profit_usd = net_resell_yield_usd - listed_price_usd
+                        profit_percentage = net_profit_usd / listed_price_usd
+                except Exception as e:
+                    print(f"  [SniperAgent] Aviso: Não foi possível obter detalhes do Axie #{axie.get('id')}: {e}")
+
                 opportunities_found += 1
                 self._report_opportunity(axie, listed_price_usd, estimated_value_usd, 
                                           net_profit_usd, profit_percentage, valuation)
@@ -82,7 +97,7 @@ class SniperAgent:
         print(f"  Nível do Axie:           Lvl {valuation['level']}")
         
         # Breakdown da valoração
-        breakdown_str = " | ".join([f"{k}: ${v:.2f}" for k, v in valuation["breakdown"].items()])
+        breakdown_str = " | ".join([f"{k}: ${v:.2f}" if isinstance(v, (int, float)) else f"{k}: {v}" for k, v in valuation["breakdown"].items()])
         print(f"  Composição do Valor:     {breakdown_str}")
 
     def _execute_arbitrage(self, axie: dict, listed_usd: float, resell_usd: float):
