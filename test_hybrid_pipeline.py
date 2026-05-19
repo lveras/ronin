@@ -2,24 +2,19 @@
 """Script de validação de ponta a ponta do pipeline de IA Híbrida (ML + LLM)."""
 
 import time
-from agents.llm_meta_agent import LLMMetaAgent
+from agents.meta_analyzer import OriginsMetaAnalyzer
 from core.train_ml import train_model
 from agents.sniper_agent import SniperAgent
 
 def run_hybrid_pipeline_demo():
     print("==================================================================")
-    print("INICIANDO INTEGRAÇÃO DO PIPELINE DE IA HÍBRIDA (ML + LLM)")
+    print("INICIANDO INTEGRACAO DO PIPELINE DE IA HIBRIDA DATA-DRIVEN (TOP 100)")
     print("==================================================================")
     
-    # Passo 1: O Agente LLM analisa semanticamente as novas regras do jogo e atualiza o SQLite
-    print("\n--- PASSO 1: ATUALIZAÇÃO SEMÂNTICA DO META VIA LLM AGENT ---")
-    meta_agent = LLMMetaAgent()
-    patch_notes_mock = """
-    Patch Notes Season 12:
-    - Cactus (Horn): Dano base bufado em 30%. Sinergia com plantas agressivas aumentou muito.
-    - Nimo (Tail): Ganho de energia nerfado. Menos relevante no meta atual.
-    """
-    meta_agent.analyze_patch_notes(patch_notes_mock)
+    # Passo 1: O Agente MetaAnalyzer varre o Leaderboard e mapeia as frequencias no SQLite
+    print("\n--- PASSO 1: MAPEAMENTO ESTATISTICO DO META VIA TOP 100 LEADERBOARD ---")
+    meta_analyzer = OriginsMetaAnalyzer()
+    meta_analyzer.run_meta_analysis(limit=100)
     
     # Passo 2: O modelo de Machine Learning é retreinado com base no novo estado do banco
     print("\n--- PASSO 2: RETREINAMENTO ADAPTATIVO DO MODELO DE ML ---")
