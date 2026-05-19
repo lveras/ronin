@@ -5,7 +5,7 @@ from api.skymavis_rest import SkyMavis
 import asyncio
 from core.wallet import Wallet
 from core.config import config
-from eth_account.messages import encode_structured_data
+from eth_account.messages import encode_typed_data as encode_structured_data
 
 CONTRACTS = {
     "main_contract": {

@@ -50,8 +50,8 @@ class BuyerAgent:
         print(f"Encontrados {len(axies)} axies abaixo de {max_price_eth} ETH")
 
         for axie in axies:
-            auction = axie.get("auction", {})
-            price_usd = auction.get("currentPriceUSD", "N/A")
+            order = axie.get("order") or {}
+            price_usd = order.get("currentPriceUsd", "N/A")
             print(f"  Axie #{axie['id']} | Classe: {axie.get('class')} | "
                   f"Preço: ${price_usd} | Breeds: {axie.get('breedCount')}")
 
@@ -83,8 +83,8 @@ class BuyerAgent:
         print(f"\nVocê possui {result.get('total', 0)} axie(s):")
 
         for axie in axies:
-            auction = axie.get("auction")
-            status = "À VENDA" if auction else "Guardado"
+            order = axie.get("order")
+            status = "À VENDA" if order else "Guardado"
             print(f"  Axie #{axie['id']} | {axie.get('class')} | {status}")
 
         return axies

@@ -8,5 +8,7 @@ dependencies = [
     "requests",
     "web3",
     "pyyaml",
-    "google-cloud-secret-manager"
+    "google-cloud-secret-manager",
+    "curl-cffi"
 ]
+

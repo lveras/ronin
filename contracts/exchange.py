@@ -1,7 +1,7 @@
 import json
 import time
 from web3 import Web3
-from eth_account.messages import encode_structured_data
+from eth_account.messages import encode_typed_data as encode_structured_data
 from core.wallet import Wallet
 from core.config import config
 from api.marketplace_graphql import MarketplaceGraphQL

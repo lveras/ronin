@@ -1,4 +1,4 @@
-import requests
+from curl_cffi import requests
 from core.config import config
 
 
@@ -18,14 +18,14 @@ fragment AxieBrief on Axie {
     banned
     __typename
   }
-  auction {
+  order {
+    id
     currentPrice
-    currentPriceUSD
-    startingPrice
-    endingPrice
-    startingTimestamp
-    endingTimestamp
-    duration
+    currentPriceUsd
+    basePrice
+    endedPrice
+    maker
+    expiredAt
     __typename
   }
   parts {
@@ -63,7 +63,6 @@ fragment AxieDetail on Axie {
   bodyShape
   sireId
   matronId
-  level
   figure {
     atlas
     model
@@ -76,15 +75,14 @@ fragment AxieDetail on Axie {
     level
     __typename
   }
-  auction {
+  order {
+    id
     currentPrice
-    currentPriceUSD
-    startingPrice
-    endingPrice
-    startingTimestamp
-    endingTimestamp
-    duration
-    timeLeft
+    currentPriceUsd
+    basePrice
+    endedPrice
+    maker
+    expiredAt
     __typename
   }
   parts {
@@ -132,6 +130,7 @@ fragment AxieDetail on Axie {
 """
 
 
+
 class MarketplaceGraphQL:
     """Cliente GraphQL para o Marketplace do Axie Infinity.
 
@@ -141,12 +140,26 @@ class MarketplaceGraphQL:
 
     def __init__(self, api_key: str = None):
         self.api_key = api_key or config.get("api_key")
-        self.url = "https://api-gateway.skymavis.com/graphql/axie-marketplace"
-        self.headers = {
-            "Content-Type": "application/json",
-            "User-Agent": "Mozilla/5.0",
-            "X-API-KEY": self.api_key,
-        }
+        # Usamos o endpoint público oficial por padrão, pois não exige API Key e
+        # contorna limitações de chaves de teste antigas/expiradas usando curl_cffi.
+        if self.api_key and not self.api_key.startswith("k5o"):
+            self.url = "https://api-gateway.skymavis.com/graphql/axie-marketplace"
+            self.headers = {
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0",
+                "X-API-KEY": self.api_key,
+            }
+            self.use_gateway = True
+        else:
+            self.url = "https://graphql-gateway.axieinfinity.com/graphql"
+            self.headers = {
+                "Accept": "*/*",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Content-Type": "application/json",
+                "Origin": "https://app.axieinfinity.com",
+                "Referer": "https://app.axieinfinity.com/"
+            }
+            self.use_gateway = False
 
     def _execute_query(self, operation_name: str, query: str, variables: dict = None):
         """Executa uma query GraphQL e retorna o JSON de resposta."""
@@ -155,20 +168,28 @@ class MarketplaceGraphQL:
             "query": query,
             "variables": variables or {},
         }
-        response = requests.post(self.url, headers=self.headers, json=payload)
 
-        if response.status_code in (401, 403):
-            raise PermissionError(
-                f"Acesso negado ({response.status_code}). Verifique se a sua API Key "
-                "está correta no config.yml ou no GCP Secret Manager."
-            )
+        if self.use_gateway:
+            response = requests.post(self.url, headers=self.headers, json=payload)
+            if response.status_code in (401, 403):
+                raise PermissionError(
+                    f"Acesso negado ({response.status_code}). Verifique se a sua API Key "
+                    "está correta no config.yml ou no GCP Secret Manager."
+                )
+        else:
+            response = requests.post(self.url, headers=self.headers, json=payload, impersonate="chrome")
+
+        # Se a requisição retornar erros em JSON (por exemplo, HTTP 400 por erro de validação GraphQL),
+        # tentamos capturar a mensagem de erro do GraphQL antes de lançar a exceção de HTTP.
+        try:
+            data = response.json()
+            if "errors" in data:
+                raise Exception(f"GraphQL Error: {data['errors']}")
+        except ValueError:
+            # Caso o corpo não seja um JSON válido, deixamos seguir para o raise_for_status()
+            data = {}
 
         response.raise_for_status()
-        data = response.json()
-
-        if "errors" in data:
-            raise Exception(f"GraphQL Error: {data['errors']}")
-
         return data.get("data")
 
     # ─── 1. Buscar Axies à Venda ───────────────────────────────────
@@ -232,13 +253,6 @@ class MarketplaceGraphQL:
             criteria["parts"] = parts
         if breed_count is not None:
             criteria["breedCount"] = breed_count
-        if min_price or max_price:
-            criteria["price"] = {}
-            if min_price:
-                criteria["price"]["from"] = min_price
-            if max_price:
-                criteria["price"]["to"] = max_price
-
         variables = {
             "from": offset,
             "size": min(size, 100),
@@ -248,7 +262,22 @@ class MarketplaceGraphQL:
         }
 
         data = self._execute_query("GetAxieBriefList", query, variables)
-        return data.get("axies", {})
+        result = data.get("axies", {})
+
+        # Filtro de preço local/client-side (para evitar erros de validação no schema da API)
+        if (min_price or max_price) and "results" in result:
+            filtered_results = []
+            for axie in result["results"]:
+                order = axie.get("order") or {}
+                price_wei = int(order.get("currentPrice", 0))
+                if min_price and price_wei < int(min_price):
+                    continue
+                if max_price and price_wei > int(max_price):
+                    continue
+                filtered_results.append(axie)
+            result["results"] = filtered_results
+
+        return result
 
     # ─── 2. Buscar Detalhes e Histórico de um Axie ─────────────────
 
